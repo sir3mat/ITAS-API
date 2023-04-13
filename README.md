@@ -10,7 +10,6 @@
 py manage.py runserver
 ```
 
-
 ### API Endpoints
 
 - `/pathfinedr/`
