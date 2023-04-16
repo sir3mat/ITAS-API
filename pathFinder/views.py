@@ -30,6 +30,5 @@ class PathFinderViewSet(generics.GenericAPIView):
                 {"error": "End node could not be reached!"}, status=status.HTTP_400_BAD_REQUEST)
             return response
 
-        response = Response(res, status=status.HTTP_200_OK, headers={
-                            "Access-Control-Allow-Origin": "*"})
+        response = Response(res, status=status.HTTP_200_OK)
         return response

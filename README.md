@@ -7,11 +7,11 @@
 
 ## How to use
 ```
-py manage.py runserver
+python manage.py runserver
 ```
 
 ### API Endpoints
 
-- `/pathfinedr/`
+- `/pathFinder/`
 - `/api/spec/`
 - `/api/spec/swagger-ui`
