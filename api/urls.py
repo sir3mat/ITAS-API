@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 urlpatterns = [
-    path("pathFinder/", include("pathFinder.urls")),
+    path("", include("pathFinder.urls")),
     path("admin/", admin.site.urls),
     # schema json
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

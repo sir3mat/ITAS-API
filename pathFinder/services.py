@@ -5,14 +5,10 @@ import igraph as ig
 
 from .types import CarReq, Map, Maps, Road
 
+SAVED_MAPS = {}
+
 
 class PathFinderService:
-    def __init__(self):
-        # read /static/maps.json file and create Maps object
-        with open(os.path.join(settings.BASE_DIR, 'static/maps.json'), 'r') as f:
-            json_string = f.read()
-        self.maps = Maps(json_string)
-
     def getCarNumber(self, road: Road):
         return random.randint(0, 10)
 
@@ -20,12 +16,12 @@ class PathFinderService:
         return random.randint(0, 100)
 
     def computeWeight(self, carNumber, roadLen):
-        return 10*carNumber + roadLen
+        return 10 * carNumber + roadLen  # add semaphores weight
 
-    def mapToGraph(self, map: Map):
+    def mapToGraph(self, current_map: Map):
         edges = []
         weights = []
-        for road in map.roads:
+        for road in current_map.roads:
             # get sourceIntersection# and targetIntersection# (-1 is for index correctness for ig.graph)
             sourceId = int(road.source.replace("intersection", "")) - 1
             targetId = int(road.target.replace("intersection", "")) - 1
@@ -41,21 +37,21 @@ class PathFinderService:
 
         # create graph
         g = ig.Graph(
-            len(map.intersections),
+            len(current_map.intersections),
             edges,
             directed=True,
             vertex_attrs={
-                'name': [ele + 1 for ele in range(len(map.intersections))], },
+                'name': [ele + 1 for ele in range(len(current_map.intersections))], },
         )
         g.es['weight'] = weights
-
         return g
 
     def getAllPaths(self, g: ig.Graph, from_vertex: int, to_vertex: int):
         try:
             fromIndex = g.vs.find(name=from_vertex).index
             toIndex = g.vs.find(name=to_vertex).index
-        except:
+        except Exception as e:
+            print(f"Exception [getAllPaths]: {e}")
             return None
 
         all_paths = g.get_all_shortest_paths(
@@ -70,16 +66,19 @@ class PathFinderService:
 
         res = {}
         for idx, path in enumerate(all_paths, start=1):
-            res[idx] = [vertex+1 for vertex in path]
+            res[idx] = [vertex + 1 for vertex in path]
             print("Path {}: {}".format(idx, res[idx]))
 
         return res
 
-    def createResponse(self, allPaths):
-        obj = {}
+    def createResponse(self, allPaths, error):
+        obj = {
+            "status": "ok" if not error else "error",
+            "message": "" if not error else error,
+        }
         for key, value in allPaths.items():
             obj["pathId"] = key
-            obj["path"] = ["intersection"+str(ele) for ele in value]
+            obj["path"] = ["intersection" + str(ele) for ele in value]
         return obj
 
     def updateGraph(self, g: ig.Graph, road: Road):
@@ -98,7 +97,7 @@ class PathFinderService:
         if edge == -1:
             # add edge
             g.add_edge(sourceId, targetId)
-            g.es[g.ecount()-1]['weight'] = weight
+            g.es[g.ecount() - 1]['weight'] = weight
         else:
             # update edge weight
             g.es[edge]['weight'] = weight
@@ -106,19 +105,23 @@ class PathFinderService:
         return g
 
     def getPath(self, req: CarReq):
-        # get map from maps object and set source and target vertex
-        map = self.maps.mapList[req.mapId]
-        from_vertex = req.fromIntersection
-        to_vertex = req.toIntersection
+        error = None
+        try:
+            # get map from maps object and set source and target vertex
+            current_map = Map(req.mapId, SAVED_MAPS[req.mapId])
+            from_vertex = req.fromIntersection
+            to_vertex = req.toIntersection
 
-        # create graph from map
-        g = self.mapToGraph(map)
+            # create graph from map
+            g = self.mapToGraph(current_map)
 
-        # all shortest path
-        allPaths = self.getAllPaths(g, from_vertex, to_vertex)
+            # all shortest path
+            allPaths = self.getAllPaths(g, from_vertex, to_vertex)
 
-        if allPaths is None:
-            return None
+            if allPaths is None:
+                return None
+        except Exception as e:
+            error = f"Server Exception [getPath]: {e}"
 
-        res = self.createResponse(allPaths)
+        res = self.createResponse(allPaths, error)
         return res

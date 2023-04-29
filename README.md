@@ -15,3 +15,7 @@ python manage.py runserver
 - `/pathFinder/`
 - `/api/spec/`
 - `/api/spec/swagger-ui`
+
+### Admin Panel
+username: admin
+password: admin
