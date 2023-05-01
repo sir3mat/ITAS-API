@@ -2,10 +2,11 @@ import json
 
 
 class CarReq:
-    def __init__(self, mapId, fromIntersection, toIntersection):
+    def __init__(self, mapId, fromIntersection, toIntersection, lengthOnly):
         self.mapId = mapId
         self.fromIntersection = fromIntersection
         self.toIntersection = toIntersection
+        self.onlyLen = lengthOnly
 
 
 class Road:

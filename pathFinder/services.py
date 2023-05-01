@@ -15,10 +15,16 @@ class PathFinderService:
     def getRoadLen(self, road: Road):
         return road.length
 
-    def computeWeight(self, carNumber, roadLen):
-        return 10*carNumber + roadLen  # add semaphores weight
+    def computeWeight(self, road: Road, lengthOnly=False):
+        if lengthOnly:
+            roadLen = self.getRoadLen(road)
+            return roadLen
+        else:
+            carNumber = self.getCarNumber(road)
+            roadLen = self.getRoadLen(road)
+            return 10 * carNumber + roadLen  # add semaphores weight
 
-    def mapToGraph(self, current_map: Map):
+    def mapToGraph(self, current_map: Map, lengthOnly=False):
         edges = []
         weights = []
         for road in current_map.roads:
@@ -27,12 +33,8 @@ class PathFinderService:
             targetId = int(road.target.replace("intersection", "")) - 1
 
             edges.append((sourceId, targetId))
-            # add random weight to edge (in real use case, we should use the number of cars in a road between two intersections)
-            carNumber = self.getCarNumber(road)
-            roadLen = self.getRoadLen(road)
-
             # compute a weight proportional to junction traffic and road length
-            weight = self.computeWeight(carNumber, roadLen)
+            weight = self.computeWeight(road, lengthOnly)
             weights.append(weight)
             assert len(weights) == len(edges)
 
@@ -130,7 +132,7 @@ class PathFinderService:
 
         return g
 
-    def getPath(self, req: CarReq):
+    def getPath(self, req: CarReq, lengthOnly=False):
         error = None
         try:
             # get map from maps object and set source and target vertex
@@ -139,7 +141,7 @@ class PathFinderService:
             to_vertex = req.toIntersection
 
             # create graph from map
-            g = self.mapToGraph(current_map)
+            g = self.mapToGraph(current_map, lengthOnly)
 
             # all shortest path
             # allPaths = self.getAllPaths(g, from_vertex, to_vertex)

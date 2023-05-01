@@ -30,8 +30,9 @@ class PathFinderViewSet(generics.GenericAPIView):
 
         fromIntersection = int(request.query_params["fromIntersection"])
         toIntersection = int(request.query_params["toIntersection"])
+        lengthOnly = request.query_params["lengthOnly"] == "true"
         pathFinder_service = PathFinderService()
-        req = CarReq(mapId, fromIntersection, toIntersection)
+        req = CarReq(mapId, fromIntersection, toIntersection, lengthOnly)
         res = pathFinder_service.getPath(req)
         if res is None:
             response = Response(
