@@ -4,5 +4,7 @@ from pathFinder import views
 
 urlpatterns = [
     path("pathFinder", views.PathFinderViewSet.as_view(), name="pathFinder"),
-    path("newMap", views.NewMapViewSet.as_view(), name="newMap"),
+    path("map", views.MapViewSet.as_view(), name="map"),
+    path("roads", views.RoadsViewSet.as_view(),
+         name="roads"),
 ]

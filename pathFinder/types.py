@@ -13,6 +13,8 @@ class Road:
         self.id_ = id_
         self.source = details["source"]
         self.target = details["target"]
+        self.length = details["length"]
+        self.carsNumber = details["carsNumber"]
 
 
 class Intersection:
@@ -24,12 +26,11 @@ class Intersection:
 
 class Map:
     intersections: list[Intersection]
-    intersections: list[Road]
+    roads: list[Road]
 
     def __init__(self, id_, details):
         self.id_ = id_
         self.mapId = id_
-
         self.intersections = []
         for key in details["intersections"].keys():
             intersectionsId = key
@@ -46,7 +47,6 @@ class Map:
         self.carsNumber = details["carsNumber"]
         self.time = details["time"]
         # self.controlSignals = details["controlSignals"]   # todo fix
-
 
 
 class Maps:

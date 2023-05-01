@@ -54,7 +54,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True  # Set to False if you want to specify allowed origins
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE']  # Set allowed methods
+CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT',
+                      'DELETE', 'PATCH']  # Set allowed methods
 CORS_ALLOW_HEADERS = ['Content-Type', 'Authorization']  # Set allowed headers
 
 # DRF settings

@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
-from pathFinder.types import CarReq
+from pathFinder.types import CarReq, Map
 from rest_framework import generics
 from pathFinder.services import PathFinderService, SAVED_MAPS
 from drf_spectacular.utils import extend_schema
@@ -9,7 +9,6 @@ import json
 
 
 class PathFinderViewSet(generics.GenericAPIView):
-
     @extend_schema(
         parameters=[
             GetPathsSerializer
@@ -46,12 +45,10 @@ class PathFinderViewSet(generics.GenericAPIView):
         return response
 
 
-class NewMapViewSet(generics.GenericAPIView):
+class MapViewSet(generics.GenericAPIView):
 
     def post(self, request):
-
         new_map = request.data.get('map')
-
         try:
             if new_map and json.loads(new_map):
                 new_map = json.loads(new_map)
@@ -72,3 +69,26 @@ class NewMapViewSet(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
         return response
 
+
+class RoadsViewSet(generics.GenericAPIView):
+    def patch(self, request):
+        mapId = request.data.get('mapId')
+        if mapId not in SAVED_MAPS:
+            response = Response(
+                {
+                    "status": "error",
+                    "message": "Map not found!"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            return response
+        roadsUpdate = request.data.get('roads')
+        map = Map(mapId, SAVED_MAPS[mapId])
+        for road in map.roads:
+            target = roadsUpdate[road.id_]
+            SAVED_MAPS[mapId]["roads"][road.id_]["carsNumber"] = target["carsNumber"]
+
+
+        response = Response({
+            "status": "ok",
+            "message": "Roads updated!"
+        }, status=status.HTTP_200_OK)
+        return response

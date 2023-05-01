@@ -10,13 +10,13 @@ SAVED_MAPS = {}
 
 class PathFinderService:
     def getCarNumber(self, road: Road):
-        return random.randint(0, 10)
+        return road.carsNumber
 
     def getRoadLen(self, road: Road):
-        return random.randint(0, 100)
+        return road.length
 
     def computeWeight(self, carNumber, roadLen):
-        return 10 * carNumber + roadLen  # add semaphores weight
+        return 10*carNumber + roadLen  # add semaphores weight
 
     def mapToGraph(self, current_map: Map):
         edges = []
@@ -30,6 +30,7 @@ class PathFinderService:
             # add random weight to edge (in real use case, we should use the number of cars in a road between two intersections)
             carNumber = self.getCarNumber(road)
             roadLen = self.getRoadLen(road)
+
             # compute a weight proportional to junction traffic and road length
             weight = self.computeWeight(carNumber, roadLen)
             weights.append(weight)
@@ -66,6 +67,31 @@ class PathFinderService:
 
         res = {}
         for idx, path in enumerate(all_paths, start=1):
+            res[idx] = [vertex + 1 for vertex in path]
+            print("Path {}: {}".format(idx, res[idx]))
+
+        return res
+
+    def getShortestPath(self, g: ig.Graph, from_vertex: int, to_vertex: int):
+        try:
+            fromIndex = g.vs.find(name=from_vertex).index
+            toIndex = g.vs.find(name=to_vertex).index
+        except Exception as e:
+            print(f"Exception [getShortestPath]: {e}")
+            return None
+
+        shortest_path = g.get_shortest_paths(
+            fromIndex,
+            to=toIndex,
+            weights='weight',
+            mode='out'
+        )
+        if not shortest_path:
+            print("End node could not be reached!")
+            return None
+
+        res = {}
+        for idx, path in enumerate(shortest_path, start=1):
             res[idx] = [vertex + 1 for vertex in path]
             print("Path {}: {}".format(idx, res[idx]))
 
@@ -116,8 +142,9 @@ class PathFinderService:
             g = self.mapToGraph(current_map)
 
             # all shortest path
-            allPaths = self.getAllPaths(g, from_vertex, to_vertex)
-
+            # allPaths = self.getAllPaths(g, from_vertex, to_vertex)
+            # get shortest path
+            allPaths = self.getShortestPath(g, from_vertex, to_vertex)
             if allPaths is None:
                 return None
         except Exception as e:
