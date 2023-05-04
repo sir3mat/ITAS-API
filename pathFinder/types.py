@@ -16,6 +16,7 @@ class Road:
         self.target = details["target"]
         self.length = details["length"]
         self.carsNumber = details["carsNumber"]
+        self.lanesCarNumbers = details["lanesCarNumbers"]
 
 
 class Intersection:

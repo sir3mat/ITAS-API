@@ -85,8 +85,7 @@ class RoadsViewSet(generics.GenericAPIView):
         map = Map(mapId, SAVED_MAPS[mapId])
         for road in map.roads:
             target = roadsUpdate[road.id_]
-            SAVED_MAPS[mapId]["roads"][road.id_]["carsNumber"] = target["carsNumber"]
-
+            SAVED_MAPS[mapId]["roads"][road.id_]["lanesCarNumbers"] = target["lanesCarNumbers"]
 
         response = Response({
             "status": "ok",

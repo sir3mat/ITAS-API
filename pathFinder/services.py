@@ -9,32 +9,49 @@ SAVED_MAPS = {}
 
 
 class PathFinderService:
+    # def getCarNumber(self, road: Road, laneId=0):
+    #     return road.lanesCarNumbers[laneId]
+
     def getCarNumber(self, road: Road):
-        return road.carsNumber
+        sum = (road.lanesCarNumbers[0] + road.lanesCarNumbers[1]) // 2
+        return sum
 
     def getRoadLen(self, road: Road):
         return road.length
 
-    def computeWeight(self, road: Road, lengthOnly=False):
+    def computeWeight(self, road: Road, lengthOnly=False, laneId=0):
         if lengthOnly:
             roadLen = self.getRoadLen(road)
             return roadLen
         else:
+            # carNumber = self.getCarNumber(road, laneId)
             carNumber = self.getCarNumber(road)
             roadLen = self.getRoadLen(road)
-            return 10 * carNumber + roadLen  # add semaphores weight
+            return 30 * carNumber + roadLen  # add semaphores weight
 
     def mapToGraph(self, current_map: Map, lengthOnly=False):
         edges = []
         weights = []
+        # for road in current_map.roads:
+        #     # get sourceIntersection# and targetIntersection# (-1 is for index correctness for ig.graph)
+        #     sourceId = int(road.source.replace("intersection", "")) - 1
+        #     targetId = int(road.target.replace("intersection", "")) - 1
+        #     for laneId in range(0, len(road.lanesCarNumbers)):
+        #         edges.append((sourceId, targetId))
+        #         # compute a weight proportional to junction traffic and road length
+        #         weight = self.computeWeight(
+        #             road, lengthOnly, laneId)
+        #         weights.append(weight)
+        #         assert len(weights) == len(edges)
+
         for road in current_map.roads:
             # get sourceIntersection# and targetIntersection# (-1 is for index correctness for ig.graph)
             sourceId = int(road.source.replace("intersection", "")) - 1
             targetId = int(road.target.replace("intersection", "")) - 1
-
             edges.append((sourceId, targetId))
             # compute a weight proportional to junction traffic and road length
-            weight = self.computeWeight(road, lengthOnly)
+            weight = self.computeWeight(
+                road, lengthOnly)
             weights.append(weight)
             assert len(weights) == len(edges)
 
@@ -44,7 +61,7 @@ class PathFinderService:
             edges,
             directed=True,
             vertex_attrs={
-                'name': [ele + 1 for ele in range(len(current_map.intersections))], },
+                'name': [ele + 1 for ele in range(len(current_map.intersections))]},
         )
         g.es['weight'] = weights
         return g
@@ -99,16 +116,6 @@ class PathFinderService:
 
         return res
 
-    def createResponse(self, allPaths, error):
-        obj = {
-            "status": "ok" if not error else "error",
-            "message": "" if not error else error,
-        }
-        for key, value in allPaths.items():
-            obj["pathId"] = key
-            obj["path"] = ["intersection" + str(ele) for ele in value]
-        return obj
-
     def updateGraph(self, g: ig.Graph, road: Road):
         # get sourceIntersection# and targetIntersection# (-1 is for index correctness for ig.graph)
         sourceId = int(road.source.replace("intersection", "")) - 1
@@ -132,6 +139,40 @@ class PathFinderService:
 
         return g
 
+    def visualizeGraph(self, g: ig.Graph, targetName, shortestPath):
+        g.es['width'] = 0.5
+        pathList = shortestPath[1]
+        for i in range(len(pathList) - 1):
+            edge = g.get_eid(pathList[i]-1, pathList[i + 1]-1)
+            g.es[edge]['width'] = 3.0
+
+        ig.plot(
+            g,
+            target=targetName,
+            format='svg',
+            bbox=(800, 800),
+            layout="kk",
+            vertex_color='steelblue',
+            vertex_label=[ele + 1 for ele in range(g.vcount())],
+            vertex_shape='circle',
+            edge_width=g.es['width'],
+            edge_label=g.es["weight"],
+            edge_curved=True,
+            edge_color='#666',
+            edge_align_label=True,
+            edge_background='white'
+        )
+
+    def createResponse(self, allPaths, error):
+        obj = {
+            "status": "ok" if not error else "error",
+            "message": "" if not error else error,
+        }
+        for key, value in allPaths.items():
+            obj["pathId"] = key
+            obj["path"] = ["intersection" + str(ele) for ele in value]
+        return obj
+
     def getPath(self, req: CarReq, lengthOnly=False):
         error = None
         try:
@@ -145,12 +186,15 @@ class PathFinderService:
 
             # all shortest path
             # allPaths = self.getAllPaths(g, from_vertex, to_vertex)
+
             # get shortest path
-            allPaths = self.getShortestPath(g, from_vertex, to_vertex)
-            if allPaths is None:
+            shortestPath = self.getShortestPath(g, from_vertex, to_vertex)
+            if shortestPath is None:
                 return None
         except Exception as e:
             error = f"Server Exception [getPath]: {e}"
 
-        res = self.createResponse(allPaths, error)
+        if lengthOnly == False:
+            self.visualizeGraph(g, "out.svg", shortestPath)
+        res = self.createResponse(shortestPath, error)
         return res
