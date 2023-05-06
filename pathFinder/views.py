@@ -6,6 +6,38 @@ from pathFinder.services import PathFinderService, SAVED_MAPS
 from drf_spectacular.utils import extend_schema
 from pathFinder.serializers import GetPathsSerializer, PathResponseSerializer, ErrorResponseSerializer
 import json
+from django.urls import URLPattern, get_resolver
+from django.http import HttpResponse
+
+
+def api_urls(request):
+    resolver = get_resolver(None)
+    url_patterns = resolver.url_patterns
+    api_urls = []
+
+    def find_api_urls(url_patterns, base=''):
+        for pattern in url_patterns:
+            if isinstance(pattern, URLPattern):
+
+                api_urls.append(base + str(pattern.pattern))
+            else:
+                # URLResolver
+                if pattern.namespace:
+                    base = pattern.namespace + '/'
+                    if base == 'api/':
+                        find_api_urls(pattern.url_patterns, base)
+                # find_api_urls(pattern.url_patterns, base)     # this is for getting all urls
+
+    find_api_urls(url_patterns)
+
+    current_ip = request.build_absolute_uri('/')[:-1]
+    response_content = f"""
+    <h1>APIs</h1>
+    <ul>
+        {"".join([f"<li><a href='{current_ip}/{url}'>{url}</a></li>" for url in api_urls])}
+    </ul>
+    """
+    return HttpResponse(response_content)
 
 
 class PathFinderViewSet(generics.GenericAPIView):
@@ -90,5 +122,14 @@ class RoadsViewSet(generics.GenericAPIView):
         response = Response({
             "status": "ok",
             "message": "Roads updated!"
+        }, status=status.HTTP_200_OK)
+        return response
+
+
+class IsConnectedViewSet(generics.GenericAPIView):
+    def get(self, request):
+        response = Response({
+            "status": "ok",
+            "message": "Connection established!"
         }, status=status.HTTP_200_OK)
         return response
