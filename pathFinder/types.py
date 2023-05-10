@@ -9,6 +9,12 @@ class CarReq:
         self.onlyLen = lengthOnly
 
 
+class Lane:
+    def __init__(self, obj):
+        self.id_ = obj["id"]
+        self.carsNumber = obj["carsNumber"]
+
+
 class Road:
     def __init__(self, id_, details):
         self.id_ = id_
@@ -17,6 +23,10 @@ class Road:
         self.length = details["length"]
         self.carsNumber = details["carsNumber"]
         self.lanesCarNumbers = details["lanesCarNumbers"]
+
+        self.lanes = []
+        for lane in details["lanes"]:
+            self.lanes.append(Lane(lane))
 
 
 class Intersection:
@@ -34,30 +44,14 @@ class Map:
         self.id_ = id_
         self.mapId = id_
         self.intersections = []
-        for key in details["intersections"].keys():
-            intersectionsId = key
-            intersectionsDetails = details["intersections"][intersectionsId]
-            self.intersections.append(Intersection(
-                intersectionsId, intersectionsDetails))
-
         self.roads = []
-        for key in details["roads"].keys():
-            roadId = key
-            roadDetails = details["roads"][roadId]
+
+        for intersectionId, intersectionDetails in details["intersections"].items():
+            self.intersections.append(Intersection(intersectionId, intersectionDetails))
+
+        for roadId, roadDetails in details["roads"].items():
             self.roads.append(Road(roadId, roadDetails))
 
         self.carsNumber = details["carsNumber"]
         self.time = details["time"]
         # self.controlSignals = details["controlSignals"]   # todo fix
-
-
-class Maps:
-    mapList: list[Map]
-
-    def __init__(self, json_string):
-        data = json.loads(json_string)
-        self.mapList = []
-        for key in data.keys():
-            mapId = key
-            details = data[mapId]
-            self.mapList.append(Map(mapId, details))

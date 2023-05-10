@@ -56,7 +56,8 @@ class PathFinderViewSet(generics.GenericAPIView):
             response = Response(
                 {
                     "status": "error",
-                    "message": "Map not found!"
+                    "message": "Map not found!",
+                    "mapId": mapId
                 }, status=status.HTTP_400_BAD_REQUEST)
             return response
 

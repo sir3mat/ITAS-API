@@ -1,9 +1,5 @@
-import os
-import random
-from django.conf import settings
 import igraph as ig
-
-from .types import CarReq, Map, Maps, Road
+from pathFinder.types import CarReq, Map, Road
 
 SAVED_MAPS = {}
 
@@ -143,7 +139,7 @@ class PathFinderService:
         g.es['width'] = 0.5
         pathList = shortestPath[1]
         for i in range(len(pathList) - 1):
-            edge = g.get_eid(pathList[i]-1, pathList[i + 1]-1)
+            edge = g.get_eid(pathList[i] - 1, pathList[i + 1] - 1)
             g.es[edge]['width'] = 3.0
 
         ig.plot(
