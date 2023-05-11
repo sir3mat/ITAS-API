@@ -55,7 +55,7 @@ class PathFinderViewSet(generics.GenericAPIView):
         mapId = request.query_params["mapId"]
         if mapId not in SAVED_MAPS:
             response = Response(
-                {"status": "error", "message": "Map not found!"},
+                {"status": "error", "message": "Map not found!", "mapId": mapId},
                 status=status.HTTP_400_BAD_REQUEST,
             )
             return response
@@ -92,7 +92,6 @@ class MapViewSet(generics.GenericAPIView):
             return response
 
         SAVED_MAPS[new_map["mapId"]] = new_map
-        current_map = Map(new_map["mapId"], SAVED_MAPS[new_map["mapId"]])
         response = Response(
             {"status": "ok", "message": "Map saved!"}, status=status.HTTP_200_OK
         )
