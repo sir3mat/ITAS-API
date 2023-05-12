@@ -3,7 +3,7 @@ import random
 from django.conf import settings
 import igraph as ig
 
-from .types import CarReq, Lane, Map, Maps, Road
+from .types import CarReq, Lane, Map, Maps, OnlineReq, Road
 
 SAVED_MAPS = {}
 
@@ -12,8 +12,8 @@ class PathFinderService:
     def getTrafficLightWeight(self, lane: Lane):
         state = lane.controlSignalState
         timeElapsed = lane.controlSignalTime
-        redLightDuration = lane.redLightDuration
-        greenLightDuration = lane.greenLightDuration
+        redLightDuration = lane.redLightDuration + 0.01
+        greenLightDuration = lane.greenLightDuration + 0.01
 
         if state == "red":
             timeFactor = (redLightDuration - timeElapsed) / redLightDuration
@@ -33,7 +33,7 @@ class PathFinderService:
             roadLen = road.length
             trafficLightWeight = self.getTrafficLightWeight(lane)
 
-            return (roadLen / 50) * carNumber * trafficLightWeight
+            return roadLen * trafficLightWeight + carNumber
 
     # def mapToGraph(self, current_map: Map, lengthOnly=False):
     # edges = []
@@ -207,15 +207,62 @@ class PathFinderService:
 
             shortestPath = paths[costs.index(min(costs))][1]
             intersectionList = paths[costs.index(min(costs))][0]
-            print("Shortest path: {}".format(shortestPath))
-            print("Intersection list: {}".format(intersectionList))
 
             if shortestPath is None:
                 return None
 
-            if lengthOnly == False:
-                self.visualizeGraph(g, "out.svg", shortestPath)
+            # if lengthOnly == False:
+            #     self.visualizeGraph(g, "out.svg", shortestPath)
 
+            res = self.createResponse(intersectionList, error)
+            return res
+
+        except Exception as e:
+            error = f"Server Exception [getPath]: {e}"
+            return error
+
+
+    def getOnlinePath(self, req: OnlineReq):
+        error = None
+        try:
+            # get map from maps object and set source and target vertex
+            current_map = Map(req.mapId, SAVED_MAPS[req.mapId])
+            fromLaneId = req.fromLaneId
+            to_vertex = req.toIntersection
+            lengthOnly = req.lengthOnly
+            # create graph from map
+            g = self.mapToGraph(current_map, lengthOnly)
+
+            # # get shortest path
+            paths = []
+            costs = []
+            fromLaneIds = [fromLaneId]
+            toLaneIds = []
+
+            for intersection in current_map.intersections:
+                if str(intersection.id_).removeprefix("intersection") == (str(to_vertex)):
+                    for road in intersection.roads:
+                        for lane in road.lanes:
+                            toLaneIds.append(lane.id_)
+
+            for fromLaneId in fromLaneIds:
+                for toLaneId in toLaneIds:
+                    intersectionList, shortestPath = self.getShortestPath(
+                        current_map,
+                        g,
+                        fromLaneId,
+                        toLaneId,
+                    )
+                    shortest_path_weight = sum(g.es[i]["weight"] for i in shortestPath[0])
+                    paths.append((intersectionList, shortestPath))
+                    costs.append(shortest_path_weight)
+
+            shortestPath = paths[costs.index(min(costs))][1]
+            intersectionList = paths[costs.index(min(costs))][0]
+
+            if shortestPath is None:
+                return None
+            
             res = self.createResponse(intersectionList, error)
             return res
 

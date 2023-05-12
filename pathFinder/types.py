@@ -1,5 +1,12 @@
 import json
 
+class OnlineReq:
+    def __init__(self, mapId, fromLaneId, toIntersection, lengthOnly):
+        self.mapId = mapId
+        self.fromLaneId = fromLaneId
+        self.toIntersection = toIntersection
+        self.lengthOnly = lengthOnly
+
 
 class CarReq:
     def __init__(self, mapId, fromIntersection, toIntersection, lengthOnly):

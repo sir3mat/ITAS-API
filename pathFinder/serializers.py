@@ -8,6 +8,12 @@ class GetPathsSerializer(serializers.Serializer):
     toIntersection = serializers.IntegerField()
 
 
+class GetOnlinePathsSerializer(serializers.Serializer):
+    mapId = serializers.IntegerField()
+    fromLaneId = serializers.StringRelatedField()
+    toIntersection = serializers.IntegerField()
+
+
 class PathResponseSerializer(serializers.Serializer):
     pathId = serializers.IntegerField()
     path = serializers.ListField(child=serializers.StringRelatedField())

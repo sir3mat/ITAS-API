@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.response import Response
-from pathFinder.types import CarReq, Map
+from pathFinder.types import CarReq, Map, OnlineReq
 from rest_framework import generics
 from pathFinder.services import PathFinderService, SAVED_MAPS
 from drf_spectacular.utils import extend_schema
@@ -65,6 +65,39 @@ class PathFinderViewSet(generics.GenericAPIView):
         pathFinder_service = PathFinderService()
         req = CarReq(mapId, fromIntersection, toIntersection, lengthOnly)
         res = pathFinder_service.getPath(req)
+        if res is None:
+            response = Response(
+                {"status": "error", "message": "End node could not be reached!"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+            return response
+
+        response = Response(res, status=status.HTTP_200_OK)
+        return response
+
+
+class OnlinePathFinderViewSet(generics.GenericAPIView):
+    @extend_schema(
+        parameters=[GetPathsSerializer],
+        responses={
+            200: PathResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+    )
+    def get(self, request):
+        mapId = request.query_params["mapId"]
+        if mapId not in SAVED_MAPS:
+            response = Response(
+                {"status": "error", "message": "Map not found!", "mapId": mapId},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+            return response
+        fromLaneId = str(request.query_params["fromLaneId"])
+        toIntersection = int(request.query_params["toIntersection"])
+        lengthOnly = request.query_params["lengthOnly"] == "true"
+        pathFinder_service = PathFinderService()
+        req = OnlineReq(mapId, fromLaneId, toIntersection, lengthOnly)
+        res = pathFinder_service.getOnlinePath(req)
         if res is None:
             response = Response(
                 {"status": "error", "message": "End node could not be reached!"},
