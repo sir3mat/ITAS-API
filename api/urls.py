@@ -17,7 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from pathFinder import views
+
 urlpatterns = [
+    # index home page is in pathFinder.views.index
+    path("", views.index, name="main-view"),
+
     # API endpoints
     path("api/", include(("pathFinder.urls", 'api'), namespace='api'), name="api"),
 

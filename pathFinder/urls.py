@@ -4,7 +4,7 @@ from pathFinder import views
 
 urlpatterns = [
     # path("", views.IndexViewSet.as_view(), name="index"),
-    path('', views.api_urls, name='api_urls'),
+    path('', views.api_urls_page, name='api_urls'),
 
     # API endpoints
     path("pathFinder", views.PathFinderViewSet.as_view(), name="pathFinder"),

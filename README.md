@@ -11,17 +11,14 @@ python manage.py runserver
 ```
 
 ### API Endpoints
-
-- `/pathFinder/`
+- `/api/`
+- `/api/pathFinder`
+- `/api/map`
+- `/api/roads`
+- `/api/onlinePathFinder`
+- `/api/isConnected`
 - `/api/spec/`
 - `/api/spec/swagger-ui`
 
-### Admin Panel
-username: admin
-password: admin
-
-## NOTES
-- not able to compute best path only on lanes(the graph cannot handle this scenario) -> hacks needed
-
 ## TODO
-- add traffic lights
+- [x] add traffic lights
