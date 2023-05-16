@@ -43,7 +43,7 @@ def api_urls_page(request):
 
     find_api_urls(url_patterns)
 
-    api_urls = [url for url in api_urls if not url]
+    api_urls = [url for url in api_urls if url]
 
     current_ip = request.build_absolute_uri("/")[:-1]
     response_content = f"""
