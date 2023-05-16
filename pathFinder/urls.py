@@ -10,7 +10,7 @@ urlpatterns = [
     path("pathFinder", views.PathFinderViewSet.as_view(), name="pathFinder"),
     path("map", views.MapViewSet.as_view(), name="map"),
     path("roads", views.RoadsViewSet.as_view(), name="roads"),
-
+    path("onlinePathFinder", views.OnlinePathFinderViewSet.as_view(), name="onlinePathFinder"),
     # Connection to the frontend
     path("isConnected", views.IsConnectedViewSet.as_view(), name="isConnected"),
 ]
