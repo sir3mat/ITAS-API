@@ -21,7 +21,9 @@ class PathFinderService:
             timeFactor = timeElapsed / greenLightDuration
         return timeFactor
 
-    def computeWeight(self, road: Road, lengthOnly, lane: Lane):
+    def computeWeight(
+        self, road: Road, lengthOnly, lane: Lane, considerTrafficLightMore: bool
+    ):
         if lengthOnly:
             roadLen = road.length
             return roadLen
@@ -31,9 +33,12 @@ class PathFinderService:
 
             carNumber = lane.carsNumber
             roadLen = road.length
-            trafficLightWeight = self.getTrafficLightWeight(lane)
-
-            return roadLen * trafficLightWeight + carNumber
+            if considerTrafficLightMore:
+                trafficLightWeight = self.getTrafficLightWeight(lane)
+                return trafficLightWeight * 30 * roadLen + carNumber
+            else:
+                trafficLightWeight = self.getTrafficLightWeight(lane)
+                return roadLen + 30 * carNumber
 
     # def mapToGraph(self, current_map: Map, lengthOnly=False):
     # edges = []
@@ -70,7 +75,12 @@ class PathFinderService:
     #     },
     # )
     # return g
-    def mapToGraph(self, current_map: Map, lengthOnly=False):
+    def mapToGraph(
+        self,
+        current_map: Map,
+        lengthOnly=False,
+        trafficLightsToConsider: list[str] = [],
+    ):
         g = ig.Graph(directed=True)
         for road in current_map.roads:
             for lane in road.lanes:
@@ -86,9 +96,14 @@ class PathFinderService:
                         for other_lane in other_road.lanes:
                             if other_lane.id_ != lane.id_:
                                 g.add_edge(lane.id_, other_lane.id_)
-                                g.es[-1]["weight"] = self.computeWeight(
-                                    road, lengthOnly, lane
-                                )
+                                if lane.id_ in trafficLightsToConsider:
+                                    g.es[-1]["weight"] = self.computeWeight(
+                                        road, lengthOnly, lane, True
+                                    )
+                                else:
+                                    g.es[-1]["weight"] = self.computeWeight(
+                                        road, lengthOnly, lane, False
+                                    )
         return g
 
     def getShortestPath(
@@ -168,8 +183,6 @@ class PathFinderService:
             from_vertex = req.fromIntersection
             to_vertex = req.toIntersection
             lengthOnly = req.lengthOnly
-            # create graph from map
-            g = self.mapToGraph(current_map, lengthOnly)
 
             # # get shortest path
             paths = []
@@ -184,12 +197,16 @@ class PathFinderService:
                     for road in intersection.roads:
                         for lane in road.lanes:
                             fromLaneIds.append(lane.id_)
+
                 if str(intersection.id_).removeprefix("intersection") == (
                     str(to_vertex)
                 ):
                     for road in intersection.roads:
                         for lane in road.lanes:
                             toLaneIds.append(lane.id_)
+
+            # create graph from map
+            g = self.mapToGraph(current_map, lengthOnly, fromLaneIds)
 
             for fromLaneId in fromLaneIds:
                 for toLaneId in toLaneIds:
@@ -221,7 +238,6 @@ class PathFinderService:
             error = f"Server Exception [getPath]: {e}"
             return error
 
-
     def getOnlinePath(self, req: OnlineReq):
         error = None
         try:
@@ -240,7 +256,9 @@ class PathFinderService:
             toLaneIds = []
 
             for intersection in current_map.intersections:
-                if str(intersection.id_).removeprefix("intersection") == (str(to_vertex)):
+                if str(intersection.id_).removeprefix("intersection") == (
+                    str(to_vertex)
+                ):
                     for road in intersection.roads:
                         for lane in road.lanes:
                             toLaneIds.append(lane.id_)
@@ -253,7 +271,9 @@ class PathFinderService:
                         fromLaneId,
                         toLaneId,
                     )
-                    shortest_path_weight = sum(g.es[i]["weight"] for i in shortestPath[0])
+                    shortest_path_weight = sum(
+                        g.es[i]["weight"] for i in shortestPath[0]
+                    )
                     paths.append((intersectionList, shortestPath))
                     costs.append(shortest_path_weight)
 
@@ -262,7 +282,7 @@ class PathFinderService:
 
             if shortestPath is None:
                 return None
-            
+
             res = self.createResponse(intersectionList, error)
             return res
 
