@@ -14,13 +14,23 @@ from django.urls import URLPattern, get_resolver
 from django.http import HttpResponse
 
 
-def api_urls(request):
+# index view for home page
+def index(request):
+    return HttpResponse(
+        """
+    <h1>Path Finder</h1>
+    <p>APIs are available at <a href="/api/">/api/</a></p>
+    """
+    )
+
+
+def api_urls_page(request):
     resolver = get_resolver(None)
     url_patterns = resolver.url_patterns
     api_urls = []
 
-    def find_api_urls(url_patterns, base=""):
-        for pattern in url_patterns:
+    def find_api_urls(url_patterns_, base=""):
+        for pattern in url_patterns_:
             if isinstance(pattern, URLPattern):
                 api_urls.append(base + str(pattern.pattern))
             else:
@@ -32,6 +42,8 @@ def api_urls(request):
                 # find_api_urls(pattern.url_patterns, base)     # this is for getting all urls
 
     find_api_urls(url_patterns)
+
+    api_urls = [url for url in api_urls if url]
 
     current_ip = request.build_absolute_uri("/")[:-1]
     response_content = f"""

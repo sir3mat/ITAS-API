@@ -12,4 +12,13 @@ ITAS prototype API
 python manage.py runserver
 ```
 
+### API Endpoints
+- `/api/`
+- `/api/pathFinder`
+- `/api/map`
+- `/api/roads`
+- `/api/onlinePathFinder`
+- `/api/isConnected`
+- `/api/spec/`
+- `/api/spec/swagger-ui`
 
